@@ -124,6 +124,11 @@ function randomExcludedNumber(numLength, excludeNumber) {
 	return randNumber;
 }
 
+// create line vertices from a single point, since there's no line stimuli
+function createLineVertices(point) {
+	return [[point[0] - 0.02, point[1]], [point[0] + 0.02, point[1]]]
+}
+
 
 var frameDur;
 function updateInfo() {
@@ -149,15 +154,17 @@ var instructClock;
 var instrText;
 var ready;
 var trialClock;
-var word;
-var polygon_3;
-
-var shape_array;
 var resp;
+
+var fixation;
+var shape_array;
+
 var thanksClock;
 var thanksText;
+
 var globalClock;
 var routineTimer;
+
 function experimentInit() {
 	// Initialize components for Routine "instruct"
 	instructClock = new util.Clock();
@@ -167,7 +174,10 @@ function experimentInit() {
 		text: 'Visual Search Instructions.\n\nIn this experiment, you will indicate the orientation of the line in a target (square).\n\nPress any key to begin.',
 		font: 'Arial',
 		units: 'height',
-		pos: [0, 0], height: 0.05, wrapWidth: undefined, ori: 0,
+		pos: [0, 0],
+		height: 0.05,
+		wrapWidth: undefined,
+		ori: 0,
 		color: new util.Color('white'), opacity: 1,
 		depth: 0.0
 	});
@@ -176,18 +186,22 @@ function experimentInit() {
 
 	// Initialize components for Routine "trial"
 	trialClock = new util.Clock();
-	word = new visual.TextStim({
-		win: psychoJS.window,
-		name: 'word',
-		text: 'default text',
-		font: 'Arial',
-		units: 'height',
-		pos: [0, 0], height: 0.15, wrapWidth: undefined, ori: 0,
-		color: new util.Color('white'), opacity: 1,
-		depth: 0.0
-	});
-
 	resp = new core.Keyboard({ psychoJS, clock: new util.Clock(), waitForStart: true });
+
+	fixation = new visual.ShapeStim({
+		win: psychoJS.window,
+		name: 'fixation',
+		vertices: 'cross',
+		ori: 1.0,
+		pos: [0, 0],
+		lineWidth: 2,
+		lineColor: new util.Color([1, 1, 1]),
+		fillColor: new util.Color([1, 1, 1]),
+		size: 0.03,
+		opacity: 1,
+		depth: 0,
+		interpolate: true,
+	});
 
 	// Initialize components for Routine "thanks"
 	thanksClock = new util.Clock();
@@ -365,6 +379,8 @@ var number_of_elements;
 var coordinates_array;
 var targetItem;
 var itemToChange;
+var correctAnswer;
+
 function trialRoutineBegin(trials) {
 	return function () {
 		//------Prepare to start Routine 'trial'-------
@@ -388,16 +404,15 @@ function trialRoutineBegin(trials) {
 		console.log('current trial:', trials.getCurrentTrial());
 		
 		// update component parameters for each repeat
-		word.setColor('white');
-		word.setText('test')
-		word.setText(String(trials.thisN))
+		// word.setText(String(trials.thisN))
 		resp.keys = undefined;
 		resp.rt = undefined;
 		// keep track of which components have finished
 		trialComponents = [];
 
 		// todo make changes to shape array based on trial
-		if (!trials.getCurrentTrial().distractor) {
+		let currentTrialType = trials.getCurrentTrial()
+		if (!currentTrialType.distractor) {
 
 			// set all of the shapes to green
 			shape_array.forEach(function (element, i) {
@@ -405,7 +420,7 @@ function trialRoutineBegin(trials) {
 				element.distractor = false;
 			});
 
-			shape_array[Math.floor(Math.random() * shape_array.length)].shape = 'square'
+			shape_array[Math.floor(Math.random() * shape_array.length)].current = 'square'
 			targetItem = shape_array.filter(element => element.shape == 'square')
 		} else {
 			
@@ -423,20 +438,28 @@ function trialRoutineBegin(trials) {
 			// create a target (a square) but make sure it's not the distractor
 			let index_to_exclude = shape_array.findIndex(x => x.distractor === 'true');
 			var targetIndex = randomExcludedNumber(shape_array.length, index_to_exclude)
-			shape_array[targetIndex].shape = 'square'
+			shape_array[targetIndex].current = 'square'
 
-			itemToChange = distractor_index
+			itemToChange = shape_array[distractor_index]
 			targetItem = shape_array[targetIndex]
+
+			if (currentTrialType.matching) {
+				console.log('distractor matched')
+				itemToChange.orientation = targetItem.orientation;
+			} else {
+				console.log('distractor mismatched')
+				itemToChange.orientation = targetItem.orientation + 90;
+			}
 		}
 
-		trialComponents.push(word);
+		correctAnswer = (targetItem.orientation === 0) ? 'horizontal' : 'vertical';
+		trialComponents.push(fixation);
 		trialComponents.push(resp);
 
 		shape_array.forEach(function (item, index) {
 			var itemToAdd;
-			console.log(item.position)
+			var lineToAdd;
 			if (item.shape == 'circle') {
-				console.log('it is supposed to work')
 				itemToAdd = new visual.Polygon({
 					name: `shape_${index}`,
 					win: psychoJS.window,
@@ -457,6 +480,7 @@ function trialRoutineBegin(trials) {
 					name: `shape_${index}`,
 					win: psychoJS.window,
 					lineWidth: 4,
+					size: 1,
 					width: 0.06,
 					height: 0.06,
 					pos: item.position,
@@ -466,22 +490,26 @@ function trialRoutineBegin(trials) {
 					fillColor: new util.Color([(-1.0), (-1.0), (-1.0)])
 				});
 			}
-			trialComponents.push(itemToAdd)
+			
+			let lineVertices = createLineVertices(item.position)
+			lineToAdd = new visual.ShapeStim({
+				win: psychoJS.window,
+				name: `line_${index}`,
+				pos: item.position,
+				vertices: [[-0.02, 0], [0.02, 0]],
+				ori: item.orientation,
+				size: 1.0,
+				lineWidth: 3,
+				lineColor: new util.Color([1, 1, 1]),
+				fillColor: new util.Color([1, 1, 1]),
+				opacity: 1,
+				depth: 0,
+				units: 'height',
+				interpolate: true,
+			});
+
+			trialComponents.push(itemToAdd, lineToAdd)
 		});
-
-		// polygon_3 = new visual.Rect({
-		// 	win: psychoJS.window,
-		// 	lineWidth: 3,
-		// 	width: 0.06,
-		// 	height: 0.06,
-		// 	pos: [0, 0.2],
-		// 	ori: 0,
-		// 	units: 'height',
-		// 	lineColor: 'white',
-		// 	fillColor: 'white'
-		// })
-
-		// trialComponents.push(polygon_3);
 		
 		console.log('components:', trialComponents)
 
@@ -512,21 +540,13 @@ function trialRoutineEachFrame(trials) {
 			}
 		}
 
-		// *word* updates
-		if (t >= 0.5 && word.status === PsychoJS.Status.NOT_STARTED) {
+
+		if (t >= 0.5 && fixation.status === PsychoJS.Status.NOT_STARTED) {
 			// keep track of start time/frame for later
-			word.tStart = t;  // (not accounting for frame time here)
-			word.frameNStart = frameN;  // exact frame index
-			word.setAutoDraw(true);
+			fixation.tStart = t;  // (not accounting for frame time here)
+			fixation.frameNStart = frameN;  // exact frame index
+			fixation.setAutoDraw(true);
 		}
-
-
-		// if (t >= 0.5 && polygon_3.status === PsychoJS.Status.NOT_STARTED) {
-		// 	// keep track of start time/frame for later
-		// 	polygon_3.tStart = t;  // (not accounting for frame time here)
-		// 	polygon_3.frameNStart = frameN;  // exact frame index
-		// 	polygon_3.setAutoDraw(true);
-		// }
 
 
 		// *resp* updates
@@ -604,6 +624,8 @@ function trialRoutineEnd(trials) {
 			}
 		}
 		// store data for thisExp (ExperimentHandler)
+		psychoJS.experiment.addData('corrAns', correctAnswer);
+		psychoJS.experiment.addData('orientation', targetItem.orientation);
 		psychoJS.experiment.addData('resp.keys', resp.keys);
 		psychoJS.experiment.addData('resp.corr', resp.corr);
 		if (typeof resp.keys !== 'undefined') {  // we had a response

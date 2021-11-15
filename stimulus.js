@@ -8,15 +8,28 @@ class Stimulus {
     constructor(distractor=false, shape='circle', orientation=0, color='', position=[0, 0]) {
         this.distractor = distractor;
         this.shape = shape;
-        // this.orientation = this.orientations[Math.floor(Math.random()*this.orientations.length)]
-        this.orientation = orientation
+        // this.orientation = orientation
+        this.orientation = this.getOrientation(true)
         this.color = color
         this.position = position
     }
 
     set current(shape) {
         this.shape = shape;
-        this.orientation = this.orientations[Math.floor(Math.random() * this.orientations.length)]
+        this.orientation = this.getOrientation(false)
+    }
+
+    rand(items) {
+        // "~~" for a closest "int"
+        return items[~~(items.length * Math.random())];
+    }
+
+    getOrientation(adjust) {
+        let initial = this.rand(this.orientations);
+        if (adjust) {
+            return initial + this.rand(this.adjust)
+        }
+        return initial
     }
     
     print() {
