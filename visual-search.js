@@ -62,8 +62,8 @@ dialogCancelScheduler.add(quitPsychoJS, '', false);
 
 // psychoJS.start({expName, expInfo});
 psychoJS.start({
-	// expName,
-	// expInfo,
+	expName,
+	expInfo,
 	resources: []
 });
 
