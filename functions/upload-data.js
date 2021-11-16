@@ -17,6 +17,7 @@ exports.handler = async (event, context) => {
     async function uploadData() {
         console.log('uploading dataaaa')
         try {
+            console.log(event.body)
             const result = {
                 data: event.body
             }

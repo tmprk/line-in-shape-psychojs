@@ -770,8 +770,6 @@ function quitPsychoJS(message, isCompleted) {
 		psychoJS.experiment.nextEntry();
 	}
 
-	psychoJS.experiment.apiCall()
-
 	psychoJS.window.close();
 	psychoJS.quit({ message: message, isCompleted: isCompleted });
 
