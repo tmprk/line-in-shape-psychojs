@@ -2,7 +2,7 @@
  * Stroop Test *
  ***************/
 
-import { core, data, sound, util, visual } from './lib/psychojs-2021.2.2.js';
+import { core, data, sound, util, visual } from './library/psychojs-2021.2.1.js';
 const { PsychoJS } = core;
 const { TrialHandler } = data;
 const { Scheduler } = util;
