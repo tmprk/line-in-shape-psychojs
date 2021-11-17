@@ -6,6 +6,7 @@
     "lib": "lib"
   },
   "scripts": {
+    "lambda-build": "netlify-lambda build functions && node -p 'process.env'",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
