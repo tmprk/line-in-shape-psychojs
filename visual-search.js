@@ -18,7 +18,7 @@ const psychoJS = new PsychoJS({
 
 // open window:
 psychoJS.openWindow({
-	fullscr: false,
+	fullscr: true,
 	color: new util.Color('black'),
 	units: 'height',
 	waitBlanking: true
@@ -192,7 +192,7 @@ function experimentInit() {
 		win: psychoJS.window,
 		name: 'fixation',
 		vertices: 'cross',
-		ori: 1.0,
+		ori: 0.0,
 		pos: [0, 0],
 		lineWidth: 2,
 		lineColor: new util.Color([1, 1, 1]),
